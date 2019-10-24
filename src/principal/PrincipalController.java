@@ -9,9 +9,12 @@ import javafx.scene.control.Alert;
 import javafx.scene.control.Label;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
+import javafx.stage.FileChooser;
 import javafx.util.Callback;
 import modelo.Producto;
 import util.DateUtil;
+
+import java.io.File;
 
 public class PrincipalController {
     @FXML
@@ -92,6 +95,75 @@ public class PrincipalController {
         }
     }
 
+    @FXML
+    private void handleNew() {
+        main.getProductData().clear();
+        main.getProductFilePath();
+    }
+
+    @FXML
+    private void handleOpen() {
+        FileChooser fileChooser = new FileChooser();
+
+        // Set extension filter
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter(
+                "XML files (*.xml)", "*.xml");
+        fileChooser.getExtensionFilters().add(extFilter);
+
+        // Show open file dialog
+        File file = fileChooser.showOpenDialog(main.getPrimaryStage());
+
+        if (file != null) {
+            main.loadPersonDataFromFile(file);
+        }
+    }
+
+    @FXML
+    private void handleSave() {
+        File personFile = main.getProductFilePath();
+        if (personFile != null) {
+            main.saveProductDataToFile(personFile);
+        } else {
+            handleSaveAs();
+        }
+    }
+
+    @FXML
+    private void handleSaveAs() {
+        FileChooser fileChooser = new FileChooser();
+
+        // Set extension filter
+        FileChooser.ExtensionFilter extFilter = new FileChooser.ExtensionFilter(
+                "XML files (*.xml)", "*.xml");
+        fileChooser.getExtensionFilters().add(extFilter);
+
+        // Show save file dialog
+        File file = fileChooser.showSaveDialog(main.getPrimaryStage());
+
+        if (file != null) {
+            // Make sure it has the correct extension
+            if (!file.getPath().endsWith(".xml")) {
+                file = new File(file.getPath() + ".xml");
+            }
+            main.saveProductDataToFile(file);
+        }
+    }
+
+    @FXML
+    private void handleAbout() {
+        Alert alert = new Alert(Alert.AlertType.INFORMATION);
+        alert.setTitle("Ingenium Studios");
+        alert.setHeaderText("About");
+        alert.setContentText("(c) Ingenium Studios 2019");
+
+        alert.showAndWait();
+    }
+
+    @FXML
+    private void handleExit() {
+        System.exit(0);
+    }
+
     public void setMain(Main main) {
         this.main = main;
         productsTable.setItems(main.getProductData());
@@ -100,6 +172,11 @@ public class PrincipalController {
         productsTable.getSelectionModel().select(0);
         Producto defaultProduct = productsTable.getSelectionModel().getSelectedItem();
         if(defaultProduct != null) showProductsDetails(defaultProduct);
+
+        File file = main.getProductFilePath();
+        if (file != null) {
+            main.loadPersonDataFromFile(file);
+        }
     }
 
     private void showProductsDetails(Producto producto) {

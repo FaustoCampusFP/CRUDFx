@@ -2,7 +2,9 @@ package modelo;
 
 import javafx.beans.property.*;
 import sun.java2d.pipe.SpanShapeRenderer;
+import util.LocalDateAdapter;
 
+import javax.xml.bind.annotation.adapters.XmlJavaTypeAdapter;
 import java.time.LocalDate;
 
 public class Producto {
@@ -58,6 +60,7 @@ public class Producto {
         this.precio.set(precio);
     }
 
+    @XmlJavaTypeAdapter(LocalDateAdapter.class)
     public LocalDate getFechaFabricacion() {
         return fechaFabricacion.get();
     }

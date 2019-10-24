@@ -1,18 +1,27 @@
 package core;
 
+import java.io.File;
 import java.io.IOException;
+import java.util.prefs.Preferences;
 
 import javafx.application.Application;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.fxml.FXMLLoader;
 import javafx.scene.Scene;
+import javafx.scene.control.Alert;
 import javafx.scene.layout.AnchorPane;
 import javafx.stage.Modality;
 import javafx.stage.Stage;
 import login.LoginController;
+import modelo.ProductListWrapper;
 import modelo.Producto;
 import product.detail.ProductDetailController;
+
+import javax.xml.bind.JAXBContext;
+import javax.xml.bind.Marshaller;
+import javax.xml.bind.Unmarshaller;
+import javax.xml.transform.stream.StreamSource;
 
 public class Main extends Application {
 
@@ -24,7 +33,7 @@ public class Main extends Application {
     @Override
     public void start(Stage primaryStage) {
         this.primaryStage = primaryStage;
-        this.primaryStage.setTitle("AddressApp");
+        this.primaryStage.setTitle("Ingenium Studios");
 
         initLogin();
     }
@@ -94,10 +103,78 @@ public class Main extends Application {
         }
     }
 
-    /**
-     * Returns the main stage.
-     * @return
-     */
+    public File getProductFilePath() {
+        Preferences prefs = Preferences.userNodeForPackage(Main.class);
+        String filePath = prefs.get("filePath", null);
+        if (filePath != null) {
+            return new File(filePath);
+        } else {
+            return null;
+        }
+    }
+
+    public void setProductFilePath(File file) {
+        Preferences prefs = Preferences.userNodeForPackage(Main.class);
+        if (file != null) {
+            prefs.put("filePath", file.getPath());
+            primaryStage.setTitle("Ingenium Studio - " + file.getName());
+        } else {
+            prefs.remove("filePath");
+            primaryStage.setTitle("Ingenium Studio");
+        }
+    }
+
+    public void loadPersonDataFromFile(File file) {
+        try {
+            JAXBContext context = JAXBContext.newInstance(ProductListWrapper.class);
+            Unmarshaller um = context.createUnmarshaller();
+
+            // Reading XML from the file and unmarshalling.
+            ProductListWrapper wrapper = um.unmarshal(new StreamSource(file), ProductListWrapper.class).getValue();
+
+            productData.clear();
+            productData.addAll(wrapper.getProductos());
+
+            // Save the file path to the registry.
+            saveProductDataToFile(file);
+
+        } catch (Exception e) { // catches ANY exception
+            e.printStackTrace();
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("No se ha podido cargar los datos");
+            alert.setContentText("No se pueden cargar los datos desde el archivo:\n" + file.getPath());
+
+            alert.showAndWait();
+        }
+    }
+
+    public void saveProductDataToFile(File file) {
+        try {
+            JAXBContext context = JAXBContext
+                    .newInstance(ProductListWrapper.class);
+            Marshaller m = context.createMarshaller();
+            m.setProperty(Marshaller.JAXB_FORMATTED_OUTPUT, true);
+
+            // Wrapping our person data.
+            ProductListWrapper wrapper = new ProductListWrapper();
+            wrapper.setPersons(productData);
+
+            // Marshalling and saving XML to the file.
+            m.marshal(wrapper, file);
+
+            // Save the file path to the registry.
+            setProductFilePath(file);
+        } catch (Exception e) { // catches ANY exception
+            Alert alert = new Alert(Alert.AlertType.ERROR);
+            alert.setTitle("Error");
+            alert.setHeaderText("No se ha podido grabar los datos");
+            alert.setContentText("No se pueden grabar los datos al archivo:\n" + file.getPath());
+
+            alert.showAndWait();
+        }
+    }
+
     public static Stage getPrimaryStage() {
         return primaryStage;
     }

@@ -33,7 +33,7 @@ public class LoginController {
         alert.setTitle("Información");
         alert.setHeaderText(null);
 
-        String email = "admin@gmail.com";
+        String email = "admin";
         String password = "123456";
 
         if(txtUser.getText().equals(email) && txtPassword.getText().equals(password)) {
